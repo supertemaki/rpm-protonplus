@@ -24,31 +24,27 @@
 
 
 Name:           protonplus
-Version:        %{gen_version}
+Version:        main
 Release:        1%{?dist}
 Summary:        Simple and powerful manager for Wine, Proton, DXVK and VKD3D
 
 ExclusiveArch:  x86_64
 License:        GPL-3.0-or-later
 URL:            %{git_repo}
-Source0:        %{url}/archive/%{built_tag}/%{repo}-%{version}.tar.gz
+Source0:        %{url}/archive/refs/heads/%{version}.tar.gz
 Source1:        %{name}.rpmlintrc
 # License of the specfile
 Source2:        %{name}.spec.license
 
 
-# fdupes need to fix file rpmlint W: files-duplicate
-# /usr/share/icons/hicolor/symbolic/apps/com.vysp3r.ProtonPlus-symbolic.svg /usr/share/icons/hicolor/scalable/apps/com.vysp3r.ProtonPlus.svg
-BuildRequires:  fdupes
-BuildRequires:  gettext
+
+BuildRequires:  desktop-file-utils
+BuildRequires:  libappstream-glib
 BuildRequires:  meson >= 0.62.0
 BuildRequires:  vala
 
-BuildRequires:  /usr/bin/appstream-util
-BuildRequires:  /usr/bin/desktop-file-validate
-
-BuildRequires:  pkgconfig(gee-0.8)
 BuildRequires:  pkgconfig(gtk4)
+BuildRequires:  pkgconfig(gee-0.8)
 BuildRequires:  pkgconfig(json-glib-1.0)
 BuildRequires:  pkgconfig(libadwaita-1) >= 1.4
 BuildRequires:  pkgconfig(libarchive)
@@ -56,8 +52,17 @@ BuildRequires:  pkgconfig(libsoup-3.0)
 
 
 
-# Need for TLS support
+# TLS support
 Requires:       glib-networking
+
+
+
+# Steam Tinker Launch support
+Recommends:     wget
+Recommends:     xdotool
+Recommends:     xrandr
+Recommends:     xwininfo
+Recommends:     yad
 
 
 
@@ -74,8 +79,8 @@ Supports Steam, Lutris, Heroic and Bottles.
 
 
 %prep
-echo "%SHA256SUM0 %{SOURCE0}" | sha256sum -c -
-%autosetup -n %{repo}-%{built_tag_strip}
+#echo "%%SHA256SUM0 %%{SOURCE0}" | sha256sum -c -
+%autosetup -n %{repo}-%{version}
 
 
 
@@ -87,23 +92,16 @@ echo "%SHA256SUM0 %{SOURCE0}" | sha256sum -c -
 
 %install
 %meson_install
-
 %find_lang %{flatpak_name}
 
-# create symlink prontonplus -> com.vysp3r.ProtonPlus
-%{__ln_s} %{_bindir}/%{flatpak_name} %{buildroot}%{_bindir}/%{name}
-
-# create symlinks for icons
-# fix rpmlint W: files-duplicate
-%fdupes -s %{buildroot}%{_datadir}/icons/hicolor
+# symlink prontonplus -> com.vysp3r.ProtonPlus
+%{__ln_s} %{_bindir}/%{flatpak_name} %{buildroot}/%{_bindir}/%{name}
 
 
 
 %check
-desktop-file-validate %{buildroot}%{_datadir}/applications/%{flatpak_name}.desktop
-
-appstream-util validate-relax --nonet \
-    %{buildroot}%{_datadir}/appdata/%{flatpak_name}.appdata.xml
+appstream-util validate-relax --nonet %{buildroot}/%{_metainfodir}/%{flatpak_name}.metainfo.xml
+desktop-file-validate %{buildroot}/%{_datadir}/applications/%{flatpak_name}.desktop
 
 
 
@@ -113,10 +111,10 @@ appstream-util validate-relax --nonet \
 # install symlink prontonplus -> com.vysp3r.ProtonPlus
 %{_bindir}/%{name}
 %{_bindir}/%{flatpak_name}
-%{_datadir}/appdata/%{flatpak_name}.appdata.xml
 %{_datadir}/applications/%{flatpak_name}.desktop
 %{_datadir}/glib-2.0/schemas/%{flatpak_name}.gschema.xml
-%{_datadir}/icons/hicolor/*/apps/%{flatpak_name}.svg
+%{_datadir}/icons/hicolor/*/apps/%{flatpak_name}.*
+%{_metainfodir}/%{flatpak_name}.metainfo.xml
 
 
 
